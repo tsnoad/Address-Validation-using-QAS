@@ -26,49 +26,49 @@ static int PerformLookup (int iInstanceHandle, char *psSearch) {
 		printf("\n");
 
 		#only continue if we can get an address
-        if (sReturnCode[0] > 'K') {
+		if (sReturnCode[0] > 'K') {
 			#initialize some more variables
 		    int iLineCount;                 /* Buffer to hold line counts */
 		    char sAddressLine[1024];        /* Address line */
 			int i;                          /* Multi-purpose loop variable */
 
 			#how many lines in the returned address
-            QABatchWV_FormattedLineCount (iSearchHandle, &iLineCount);
+			QABatchWV_FormattedLineCount (iSearchHandle, &iLineCount);
 
 			#loop through lines
-            for (i = 0; iCode == 0 && i < iLineCount; i++) {
+			for (i = 0; iCode == 0 && i < iLineCount; i++) {
 				#format the line... or something
-                iCode = QABatchWV_GetFormattedLine (iSearchHandle, i, sAddressLine, sizeof (sAddressLine));
-                if (iCode == 0) {
+				iCode = QABatchWV_GetFormattedLine (iSearchHandle, i, sAddressLine, sizeof (sAddressLine));
+				if (iCode == 0) {
 					#echo the line
-                    printf(sAddressLine);
+					printf(sAddressLine);
 					printf("\n");
-                }
-            }
+				}
+			}
 
 			#echo the country
 			printf(sCountry);
 			printf("\n");
 
 			#if there are unused lines?
-            if (iCode == qaerr_NOSEARCHRESULTS || iCode == 0) {
-                #get the unused lines
-                iCode = QABatchWV_UnusedLineCount (iSearchHandle, &iLineCount);
-            }
+			if (iCode == qaerr_NOSEARCHRESULTS || iCode == 0) {
+				#get the unused lines
+				iCode = QABatchWV_UnusedLineCount (iSearchHandle, &iLineCount);
+			}
 
 			#loop through unused lines
-            for (i = 0; iCode == 0 && i < iLineCount; i++) {
+			for (i = 0; iCode == 0 && i < iLineCount; i++) {
 				#initialize even more variables
-			    long lCompleteness;             /* Descibes how much of unsed input has been matched */
-			    long lType;                     /* The type of any unused input (e.g. address or name data) */
-			    long lPosition;                 /* The position of unused input in relation to the street */
-			    int bCareOf;                    /* Whether unused input has been identified as a "care of" premise prefix */
-			    int bPremSuffix;                /* Whether unused input has been identified as an alpha premise suffix */
-
+				long lCompleteness;             /* Descibes how much of unsed input has been matched */
+				long lType;                     /* The type of any unused input (e.g. address or name data) */
+				long lPosition;                 /* The position of unused input in relation to the street */
+				int bCareOf;                    /* Whether unused input has been identified as a "care of" premise prefix */
+				int bPremSuffix;                /* Whether unused input has been identified as an alpha premise suffix */
+				
 				#if something or other
-                if ((iCode = QABatchWV_GetUnusedInput (iSearchHandle, i, sAddressLine, sizeof (sAddressLine), &lCompleteness, &lType, &lPosition, &bCareOf, &bPremSuffix)) == 0) {
+				if ((iCode = QABatchWV_GetUnusedInput (iSearchHandle, i, sAddressLine, sizeof (sAddressLine), &lCompleteness, &lType, &lPosition, &bCareOf, &bPremSuffix)) == 0) {
 					#echo unused line
-                    printf (sAddressLine);
+					printf (sAddressLine);
 					printf("\n");
 				}
 			}
