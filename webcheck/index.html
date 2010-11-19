@@ -1,0 +1,338 @@
+<html>
+	<head>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/prototype/1.6.1.0/prototype.js"></script>
+
+		<script type="text/javascript">
+			var last_checked_address = new Object;
+			var check_running = false;
+			
+			Event.observe(window, 'load', init);
+			
+			function init() {
+				Event.observe($('address_input'), 'keyup', verify);
+				Event.observe($('address_input'), 'blur', verify);
+				Event.observe($('address2_input'), 'keyup', verify);
+				Event.observe($('address2_input'), 'blur', verify);
+				Event.observe($('suburb_input'), 'keyup', verify);
+				Event.observe($('suburb_input'), 'blur', verify);
+				Event.observe($('state_input'), 'mouseup', verify);
+				Event.observe($('state_input'), 'keyup', verify);
+				Event.observe($('state_input'), 'change', verify);
+				Event.observe($('state_input'), 'blur', verify);
+				Event.observe($('postcode_input'), 'keyup', verify);
+				Event.observe($('postcode_input'), 'blur', verify);
+
+				Event.observe($('country_input'), 'change', function () {
+					if ($('country_input').value == "AUS") {
+						$('suburb_input_label').innerHTML = "Suburb";
+						$('state_input_label').innerHTML = "State";
+						$('postcode_input_label').innerHTML = "Postcode";
+					} else {
+						$('suburb_input_label').innerHTML = "Town/Locality";
+						$('state_input_label').innerHTML = "State";
+						$('postcode_input_label').innerHTML = "Postal/ZIP Code";
+					}
+				});
+			}
+			
+			function verify() {
+				if (check_running) {
+					return;
+				}
+				
+				if (last_checked_address.address == $('address_input').value &&
+					last_checked_address.address2 == $('address2_input').value &&
+					last_checked_address.suburb == $('suburb_input').value &&
+					last_checked_address.state == $('state_input').value &&
+					last_checked_address.postcode == $('postcode_input').value) {
+			
+					return;
+				}
+			
+				$('verify_old_address').innerHTML = "";
+			
+				$('verify_new_address').innerHTML = "";
+			
+				check_running = true;
+			
+				last_checked_address.address = $('address_input').value;
+				last_checked_address.address2 = $('address2_input').value;
+				last_checked_address.suburb = $('suburb_input').value;
+				last_checked_address.state = $('state_input').value;
+				last_checked_address.postcode = $('postcode_input').value;
+			
+				Event.stopObserving($('didyoumean_new_input'), 'change');
+			
+				$('verify_didyoumean').hide();
+				$('verify_success').hide();
+				$('verify_failed').hide();
+				$('verify_loading').show();
+	
+				if ($('country_input').value != "AUS") {
+					$('verify_loading').hide();
+					check_running = false;
+					return;
+				}
+			
+				if ((!$('address_input').value && !$('address2_input').value) || !$('suburb_input').value) {
+					$('verify_loading').hide();
+					check_running = false;
+					return;
+				}
+			
+				new Ajax.Request('http://eacbr-qastrial.nat.internal/checkaddr.php',
+				{
+					method:'get',
+					parameters: {
+						address: $('address_input').value,
+						address2: $('address2_input').value,
+						suburb: $('suburb_input').value,
+						state: $('state_input').value,
+						postcode: $('postcode_input').value
+					},
+					onSuccess: function(transport){
+						var response = transport.responseText;
+			
+						var address = response.evalJSON();
+			
+						if (address.check_code.substring(0, 1) == "R") {
+							if (address.address.toLowerCase().trim().replace(new RegExp("\n", "g"), ", ") == $('address_input').value.toLowerCase()+($('address2_input').value ? ", "+$('address2_input').value.toLowerCase() : "") &&
+								address.suburb.toLowerCase() == $('suburb_input').value.toLowerCase() &&
+								address.state.toLowerCase() == $('state_input').value.toLowerCase() &&
+								address.postcode.toLowerCase() == $('postcode_input').value.toLowerCase()) {
+				
+								$('verify_loading').hide();
+								$('verify_success').show();
+			
+							} else {
+								$('verify_old_address').innerHTML = $('address_input').value+"<br />"+$('address2_input').value+"<br />"+$('suburb_input').value+" "+$('state_input').value+" "+$('postcode_input').value;
+					
+								$('verify_new_address').innerHTML = address.address.replace(new RegExp("\n", "g"), "<br />\n")+"<br />"+address.suburb+" "+address.state+" "+address.postcode+"";
+			
+								Event.observe($('didyoumean_new_input'), 'change', function () {
+									if (!$('didyoumean_new_input').checked) return;
+			
+									$('address_input').value = address.address.split("\n").slice(0, 1).join(", ").replace(new RegExp(",\ $"), "");
+									$('address2_input').value = address.address.split("\n").slice(1).join(", ").replace(new RegExp(",\ $"), "");
+			
+									$('suburb_input').value = address.suburb;
+									$('state_input').value = address.state;
+									$('postcode_input').value = address.postcode;
+			
+									$('didyoumean_new_input').checked = false;
+									$('didyoumean_old_input').checked = true;
+			
+									verify();
+								});
+				
+								$('verify_loading').hide();
+								$('verify_didyoumean').show();
+							}
+			
+						} else {
+							$('verify_loading').hide();
+							$('verify_failed').show();
+						}
+						
+						check_running = false;
+			
+						if (last_checked_address.address != $('address_input').value ||
+							last_checked_address.address2 != $('address2_input').value ||
+							last_checked_address.suburb != $('suburb_input').value ||
+							last_checked_address.state != $('state_input').value ||
+							last_checked_address.postcode != $('postcode_input').value) {
+					
+							verify();
+						}
+			
+					},
+					onFailure: function(){
+						console.log('Something went wrong...');
+						$('verify_loading').hide();
+						check_running = false;
+					}
+				});
+			}
+		</script>
+
+		<style type="text/css">
+			html, body {
+				margin: 0px;
+				font-family: Lucida Grande, Lucida, Arial;
+				font-size: 8pt;
+			}
+			.inputs {
+				width: 420px;
+				margin: 50px auto;
+				padding: 10px 10px;
+				border: 1px solid #cccccc;
+			}
+			.input_head {
+				margin: 10px 0px 20px 0px;
+				font-family: Georgia;
+				font-size: 16pt;
+				font-weight: normal;
+				text-align: center;
+			}
+			.input_rule {
+				margin: 10px 10px;
+				border: 0px;
+				border-bottom: 1px solid #cccccc;
+			}
+			.input_clear {
+				clear: both;
+			}
+			.input_morebelow {
+				padding-bottom: 10px;
+			}
+			.input_row {
+				width: 400px;
+				margin: 10px 0px;
+				padding: 0px 10px;
+			}
+			.input_error {
+				padding: 5px 10px;
+				background-color: #fcaf3e;
+			}
+			.input_label {
+				display: block;
+				width: 145px;
+				float: left;
+				margin-right: 5px;
+				padding-top: 4px;
+				text-align: right;
+			}
+			.input_cont {
+				width: 245px;
+				float: left;
+				margin-left: 5px;
+			}
+			.input_text .input {
+				width: 100%;
+			}
+			.input_postcode .input {
+				width: 50%;
+			}
+			.input_select .input {
+				margin: 2px 0px;
+			}
+			.input_submit {
+				text-align: center;
+			}
+			.input_verify_message {
+				width: 400px;
+				margin: 10px 0px;
+				padding: 10px;
+				background-color: #ccddff;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="inputs">
+			<h1 class="input_head">Address Form</h1>
+
+			<div class="input_row input_select">
+				<label class="input_label">Country</label>
+				<div class="input_cont">
+					<select class="input" id="country_input">
+						<option></option>
+						<option value="AUS" selected="selected">Australia</option>
+						<option>Other</option>
+					</select>
+				</div>
+				<div class="input_clear"></div>
+			</div>
+
+			<hr class="input_rule" />
+	
+			<div class="input_row input_text">
+				<label class="input_label">Address</label>
+				<div class="input_cont">
+					<input class="input" id="address_input" type="text" />
+				</div>
+				<div class="input_clear input_morebelow"></div>
+
+				<label class="input_label">&nbsp;</label>
+				<div class="input_cont">
+					<input class="input" id="address2_input" type="text" />
+				</div>
+				<div class="input_clear"></div>
+			</div>
+
+			<hr class="input_rule" />
+	
+			<div class="input_row input_text">
+				<label class="input_label" id="suburb_input_label">Suburb</label>
+				<div class="input_cont">
+					<input class="input" id="suburb_input" type="text" />
+				</div>
+				<div class="input_clear"></div>
+			</div>
+	
+			<div class="input_row input_select">
+				<label class="input_label" id="state_input_label">State</label>
+				<div class="input_cont">
+					<select class="input" id="state_input">
+						<option></option>
+						<option value="ACT">ACT</option>
+						<option value="NSW">NSW</option>
+						<option value="VIC">VIC</option>
+						<option>Other</option>
+					</select>
+				</div>
+				<div class="input_clear"></div>
+			</div>
+	
+			<div class="input_row input_text input_postcode">
+				<label class="input_label" id="postcode_input_label">Postcode</label>
+				<div class="input_cont">
+					<input class="input" id="postcode_input" type="text" />
+				</div>
+				<div class="input_clear"></div>
+			</div>
+
+			<hr class="input_rule" />
+
+			<div class="input_verify_message" id="verify_loading" style="display: none; text-align: center;">
+				<span style="visibility: hidden">...</span>verifying address...
+			</div>
+
+			<div class="input_verify_message" id="verify_success" style="display: none; background-color: ccffcc; text-align: center;">
+				<strong>address verified</strong>
+			</div>
+
+			<div class="input_verify_message" id="verify_failed" style="display: none; background-color: #ffccdd; text-align: center;">
+				<strong>we couldn't verify your address.</strong><br />
+				Please check to make sure it's correct before continuing.
+			</div>
+
+			<div class="width: 400px;" id="verify_didyoumean" style="display: none;">
+				<div style="width: 210px; float: left;">
+					<div style="padding: 10px 15px 10px 10px; text-align: center;">&nbsp;</div>
+					<div style="padding: 10px; margin-right: 5px; background-color: #ffccdd;">
+						<label id="verify_old_address" for="didyoumean_old_input" style="display: block; cursor: pointer;"></label>
+						<div style="text-align: center; margin-top: 10px;">
+							<input type="radio" id="didyoumean_old_input" name="didyoumean_input" value="old" checked="checked" />
+						</div>
+					</div>
+				</div>
+
+				<div style="width: 210px; float: left;">
+					<div style="padding: 10px 10px 10px 15px; text-align: center;"><strong>did you mean?</strong></div>
+					<div style="padding: 10px; margin-left: 5px; background-color: ccffcc;">
+						<label id="verify_new_address" for="didyoumean_new_input" style="display: block; cursor: pointer;"></label>
+						<div style="text-align: center; margin-top: 10px;">
+							<input type="radio" id="didyoumean_new_input" name="didyoumean_input" value="new" />
+						</div>
+					</div>
+				</div>
+
+				<div class="input_clear"></div>
+			</div>
+	
+			<div class="input_row input_submit">
+				<input class="input" type="button" value="Submit" />
+			</div>
+		</div>
+	</body>
+</html>
