@@ -1,0 +1,1 @@
+Currently the models for authentication and membership databases are in objects_checkaddr.php. They should be moved into separate files in this folder.
