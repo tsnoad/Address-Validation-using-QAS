@@ -39,6 +39,6 @@
 	$address_verified = $verifyProcess->disect_verified_address($check_lines);
 
 	//return the verified address and the check code as a JSON string
-	echo json_encode(array_merge((array)$address_verified, (array)array("check_code" => $check_code)))
+	echo json_encode(array_merge((array)$address_verified, (array)array("check_code" => $check_code)));
 
 ?>
