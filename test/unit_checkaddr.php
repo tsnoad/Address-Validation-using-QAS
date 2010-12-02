@@ -456,7 +456,7 @@ class verifyProcessTest {
 }
 
 //start output buffering so we don't see all the crap that would normally be echod
-//errors and warning and stuff will still show up
+//errors and warnings and stuff will still show up
 ob_start();
 
 //get the testing method
@@ -501,10 +501,10 @@ ob_clean();
 
 //where there any errors?
 if (!error_get_last()) {
-	echo "test OK.\n";
+	echo "test FAIL.\n";
 
 } else {
-	echo "test FAIL.\n";
+	echo "test OK.\n";
 }
 
 ?>

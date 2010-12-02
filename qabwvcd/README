@@ -1,0 +1,16 @@
+QABWVCD
+This is where QAS' libraries reside; As they are not open-source, they are not included in this repository.
+For instructions on installing QAS refer to the Quickaddress Pro API manual: http://www.qas.com/us/downloads/pdf/support/v4/manuals/pro/5-00/pro_api.pdf
+
+
+Using qas_startup.c
+qas_startup.c is a simple script to interface with the QAS API. It is derived from QAS' batwv.c example script, and requires the same make file to be compiled.
+
+
+Example Usage:
+cd qabwvcd/
+./qas_startup "123 fake st, sydney, 2000"
+
+
+Notes:
+You'll have to be in the qabwvcd/ directory to run ./qas_startup

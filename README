@@ -1,8 +1,10 @@
 Address Validation using QAS
 
-Installation
+QAS and licensing
 
-QAS
+Installation
+psql authentication_database < installtion/authentication.sql
+psql membership_database < installtion/membership.sql
 
 Models
 

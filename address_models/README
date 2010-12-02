@@ -1,1 +1,2 @@
-Currently the models for authentication and membership databases are in objects_checkaddr.php. They should be moved into separate files in this folder.
+Models
+These models are used as interfaces between the verifyProcess controller, and the various databases that contain address to be verified.
