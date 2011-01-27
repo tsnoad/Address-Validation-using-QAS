@@ -110,10 +110,50 @@ class verifyProcess extends systemController {
 
 		parent::logger("\nVerifying batch {$this->offset} - ".($this->offset + count($unclean_addresses)).".", 3);
 	
+/*
 		//loop through addresses
 		foreach ($unclean_addresses as $address) {
 			//process the address
 			$this->verify_address($address);
+		}
+*/
+
+		foreach (array_chunk($unclean_addresses, 20) as $unclean_addresses_chunk) {
+			unset($pids);
+
+			foreach ($unclean_addresses_chunk as $address) {
+				$pid = pcntl_fork();
+
+				if ($pid == -1) {
+					die('could not fork');
+				} else if ($pid) {
+					// we are the parent
+					$pids[] = $pid;
+				} else {
+					// we are the child
+
+					$this->verification_failed = 0;
+					$this->verification_successful = 0;
+
+					$this->verify_address($address);
+
+					if ($this->verification_successful > 0) {
+						exit(0);
+					} else {
+						exit(1);
+					}
+				}
+			}
+
+			foreach ($pids as $pid) {
+				pcntl_waitpid($pid, $status);
+
+				if (pcntl_wexitstatus($status) === 0) {
+					$this->verification_successful ++;
+				} else {
+					$this->verification_failed ++;
+				}
+			}
 		}
 
 		//how long did it take to process this batch?
